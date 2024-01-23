@@ -1,0 +1,58 @@
+[
+  {
+    "objectID": "my_trabajo_BigData.html",
+    "href": "my_trabajo_BigData.html",
+    "title": "Paco Te quiero",
+    "section": "",
+    "text": "Código#install.packages(\"readxl\")\n#install.packages(\"highcharter\")\n#install.packages(\"leaflet\")\n#install.packages(\"osmdata\")\n#install.packages(\"fmsb\")\n\nlibrary(tidyverse)\nlibrary(dplyr)\nlibrary(readxl)\nlibrary(highcharter)\nlibrary(leaflet)\nlibrary(osmdata)\nlibrary(vembedr)\nlibrary(fmsb)\nlibrary(knitr)\n\n#Creo un objeto que contiene las fechas de lanzamientos de canciones y otro objeto con las fechas de los conciertos.\nfechas_lanzamiento &lt;- as.Date(c(\"2022-07-28\", \"2022-08-25\", \"2022-10-27\", \"2023-04-06\", \"2023-05-25\", \"2023-07-06\", \"2023-10-10\", \"2023-12-07\"))\nfechas_lanzamiento &lt;- as.numeric(as.POSIXct(fechas_lanzamiento, origin = \"1970-01-01\")) * 1000\n\nfechas_conciertos &lt;- as.Date(c(\"2023-04-21\", \"2023-07-13\", \"2023-10-20\", \"2023-10-25\")) # Añade tus fechas de conciertos\nfechas_conciertos &lt;- as.numeric(as.POSIXct(fechas_conciertos, origin = \"1970-01-01\")) * 1000"
+  },
+  {
+    "objectID": "my_trabajo_BigData.html#integrantes-del-grupo",
+    "href": "my_trabajo_BigData.html#integrantes-del-grupo",
+    "title": "Paco Te quiero",
+    "section": "Integrantes del grupo",
+    "text": "Integrantes del grupo\n\n\n\n\n\nSus integrantes lo conforman cinco amigas y amigos. Gloria Ribas (voz), Lucía Matamoros (voz y guitarra), Frans Ribas (guitarra), Joan Martínez (bajo) y Pablo Robres (batería). Todos tienen algo en común y es que aman a Paco, el alter ego canallita del batería del grupo."
+  },
+  {
+    "objectID": "my_trabajo_BigData.html#demolición",
+    "href": "my_trabajo_BigData.html#demolición",
+    "title": "Paco Te quiero",
+    "section": "Demolición",
+    "text": "Demolición\nEs el segundo adelanto del EP: ‘Adultas depende del día’. A medida que una se convierte en adulta, el concepto de noche cambia. Lo que antes era un simple divertimento, ahora se ha convertido en una vía de escape. De eso va ‘demolición’. De excesos, de falta de amor propio, de adicciones, de descontrol. Del momento exacto en el que uno se da cuenta de que todo ha cambiado.\n\nCódigoknitr::include_url(\"https://open.spotify.com/embed/track/61FPKErHn6wh4eGYe9FGTk?utm_source=generator\", height = \"152\")"
+  },
+  {
+    "objectID": "my_trabajo_BigData.html#becariasoygmail.com",
+    "href": "my_trabajo_BigData.html#becariasoygmail.com",
+    "title": "Paco Te quiero",
+    "section": "Becariasoy@gmail.com",
+    "text": "Becariasoy@gmail.com\nHas acabado la carrera. 4 años. Has encontrado prácticas. Son en Madrid. Tú eres de Barcelona. Pero da igual, decides ir. Va bien. Te ascienden. Ahora eres creativo. Te habla tu ex. La de toda la vida. A la cual sigues queriendo. Quedas con ella. Te vuelve a dejar. Y al día siguiente has de ir a trabajar. Y no puedes. Y crees que es temporal. Pero no. A la semana siguiente tampoco puedes. Ni al mes. Lo has dejado todo atrás. Y simplemente no puedes. Y entonces escribo becariasoy@gmail.com. Y me mudo a Barcelona y la componemos. Guitarra Shoegaze, melodía Pop, estructura Indie; Nuestro nuevo sonido.\n\nCódigoknitr::include_url(\"https://open.spotify.com/embed/track/3XCAMyvSxB1XS2LvTnHb90?utm_source=generator&theme=0\", height = \"152\")"
+  },
+  {
+    "objectID": "my_trabajo_BigData.html#bajona-de-verano",
+    "href": "my_trabajo_BigData.html#bajona-de-verano",
+    "title": "Paco Te quiero",
+    "section": "Bajona de verano",
+    "text": "Bajona de verano\nTrata de abordar el tema de la dependencia emocional. La canción está escrita a través del punto de vista de un personaje, el cual siempre ha recurrido al cariño de la misma persona para animarse y recuperarse en los momentos de bajona. Esta vez, esa persona no está, por lo que por primera vez, deberá enfrentarse a sus fantasmas en solitario, y le resulta imposible.\n\nCódigo#| echo = FALSE,\n#| out.width = \"100%\"\nembed_url(\"https://www.youtube.com/watch?v=Hef7bAt3BWA\")"
+  },
+  {
+    "objectID": "my_trabajo_BigData.html#procedimiento-4",
+    "href": "my_trabajo_BigData.html#procedimiento-4",
+    "title": "Paco Te quiero",
+    "section": "Procedimiento",
+    "text": "Procedimiento\nPara elaborar estos gráficos radiales (o spiderweb) con forma de diamante, he creado los dataframes mediante R, ya que eran pocos datos y no era muy costoso hacerlo a mano. Además, generé otro dataframe con los valores máximos registrados, estableciendo 0 como el valor mínimo. Una vez creados, los uní para obtener el dataframe con todos los datos necesarios.\nPosteriormente, filtré los dataframes por rango de edad y valores máximos y mínimos para crear los radarcharts. Me hubiera gustado colocarlos en formaciones de dos mediante la función “#| layout-nrow: 2”, pero debido a algún problema con el paquete, probablemente se veían mal al reducir su tamaño. A pesar de mi preferencia, opté por utilizar panel-tabset."
+  },
+  {
+    "objectID": "my_trabajo_BigData.html#información-sobre-la-sesión",
+    "href": "my_trabajo_BigData.html#información-sobre-la-sesión",
+    "title": "Paco Te quiero",
+    "section": "Información sobre la sesión",
+    "text": "Información sobre la sesión\nEntorno de trabajo y paquetes utilizados\n\n\n current session info \n\n─ Session info ───────────────────────────────────────────────────────────────\n setting  value\n version  R version 4.3.1 (2023-06-16 ucrt)\n os       Windows 11 x64 (build 22621)\n system   x86_64, mingw32\n ui       RTerm\n language (EN)\n collate  Spanish_Spain.utf8\n ctype    Spanish_Spain.utf8\n tz       Europe/Madrid\n date     2024-01-23\n pandoc   3.1.1 @ C:/Program Files/RStudio/resources/app/bin/quarto/bin/tools/ (via rmarkdown)\n\n─ Packages ───────────────────────────────────────────────────────────────────\n package     * version date (UTC) lib source\n assertthat    0.2.1   2019-03-21 [1] CRAN (R 4.3.2)\n backports     1.4.1   2021-12-13 [1] CRAN (R 4.3.0)\n broom         1.0.5   2023-06-09 [1] CRAN (R 4.3.1)\n cellranger    1.1.0   2016-07-27 [1] CRAN (R 4.3.1)\n cli           3.6.1   2023-03-23 [1] CRAN (R 4.3.1)\n clipr         0.8.0   2022-02-22 [1] CRAN (R 4.3.1)\n colorspace    2.1-0   2023-01-23 [1] CRAN (R 4.3.1)\n crosstalk     1.2.0   2021-11-04 [1] CRAN (R 4.3.1)\n curl          5.0.2   2023-08-14 [1] CRAN (R 4.3.1)\n data.table    1.14.8  2023-02-17 [1] CRAN (R 4.3.1)\n desc          1.4.2   2022-09-08 [1] CRAN (R 4.3.2)\n details       0.3.0   2022-03-27 [1] CRAN (R 4.3.2)\n digest        0.6.33  2023-07-07 [1] CRAN (R 4.3.1)\n dplyr       * 1.1.3   2023-09-03 [1] CRAN (R 4.3.1)\n ellipsis      0.3.2   2021-04-29 [1] CRAN (R 4.3.1)\n evaluate      0.21    2023-05-05 [1] CRAN (R 4.3.1)\n fansi         1.0.4   2023-01-22 [1] CRAN (R 4.3.1)\n fastmap       1.1.1   2023-02-24 [1] CRAN (R 4.3.1)\n fmsb        * 0.7.6   2024-01-19 [1] CRAN (R 4.3.2)\n forcats     * 1.0.0   2023-01-29 [1] CRAN (R 4.3.1)\n generics      0.1.3   2022-07-05 [1] CRAN (R 4.3.1)\n ggplot2     * 3.4.3   2023-08-14 [1] CRAN (R 4.3.1)\n glue          1.6.2   2022-02-24 [1] CRAN (R 4.3.1)\n gtable        0.3.4   2023-08-21 [1] CRAN (R 4.3.1)\n highcharter * 0.9.4   2022-01-03 [1] CRAN (R 4.3.2)\n highr         0.10    2022-12-22 [1] CRAN (R 4.3.1)\n hms           1.1.3   2023-03-21 [1] CRAN (R 4.3.1)\n htmltools     0.5.6   2023-08-10 [1] CRAN (R 4.3.1)\n htmlwidgets   1.6.2   2023-03-17 [1] CRAN (R 4.3.1)\n httr          1.4.7   2023-08-15 [1] CRAN (R 4.3.1)\n igraph        1.6.0   2023-12-11 [1] CRAN (R 4.3.2)\n jquerylib     0.1.4   2021-04-26 [1] CRAN (R 4.3.1)\n jsonlite      1.8.7   2023-06-29 [1] CRAN (R 4.3.1)\n knitr       * 1.45    2023-10-30 [1] CRAN (R 4.3.2)\n lattice       0.21-8  2023-04-05 [2] CRAN (R 4.3.1)\n leaflet     * 2.2.1   2023-11-13 [1] CRAN (R 4.3.2)\n lifecycle     1.0.4   2023-11-07 [1] CRAN (R 4.3.2)\n lubridate   * 1.9.2   2023-02-10 [1] CRAN (R 4.3.1)\n magrittr      2.0.3   2022-03-30 [1] CRAN (R 4.3.1)\n munsell       0.5.0   2018-06-12 [1] CRAN (R 4.3.1)\n osmdata     * 0.2.5   2023-08-14 [1] CRAN (R 4.3.2)\n pillar        1.9.0   2023-03-22 [1] CRAN (R 4.3.1)\n pkgconfig     2.0.3   2019-09-22 [1] CRAN (R 4.3.1)\n png           0.1-8   2022-11-29 [1] CRAN (R 4.3.1)\n purrr       * 1.0.2   2023-08-10 [1] CRAN (R 4.3.1)\n quantmod      0.4.25  2023-08-22 [1] CRAN (R 4.3.2)\n R6            2.5.1   2021-08-19 [1] CRAN (R 4.3.1)\n Rcpp          1.0.11  2023-07-06 [1] CRAN (R 4.3.1)\n readr       * 2.1.4   2023-02-10 [1] CRAN (R 4.3.1)\n readxl      * 1.4.3   2023-07-06 [1] CRAN (R 4.3.1)\n rlang         1.1.1   2023-04-28 [1] CRAN (R 4.3.1)\n rlist         0.4.6.2 2021-09-03 [1] CRAN (R 4.3.2)\n rmarkdown     2.25    2023-09-18 [1] CRAN (R 4.3.1)\n rprojroot     2.0.3   2022-04-02 [1] CRAN (R 4.3.1)\n rstudioapi    0.15.0  2023-07-07 [1] CRAN (R 4.3.1)\n scales        1.3.0   2023-11-28 [1] CRAN (R 4.3.2)\n sessioninfo   1.2.2   2021-12-06 [1] CRAN (R 4.3.2)\n stringi       1.7.12  2023-01-11 [1] CRAN (R 4.3.0)\n stringr     * 1.5.0   2022-12-02 [1] CRAN (R 4.3.1)\n tibble      * 3.2.1   2023-03-20 [1] CRAN (R 4.3.1)\n tidyr       * 1.3.0   2023-01-24 [1] CRAN (R 4.3.1)\n tidyselect    1.2.0   2022-10-10 [1] CRAN (R 4.3.1)\n tidyverse   * 2.0.0   2023-02-22 [1] CRAN (R 4.3.1)\n timechange    0.2.0   2023-01-11 [1] CRAN (R 4.3.1)\n TTR           0.24.4  2023-11-28 [1] CRAN (R 4.3.2)\n tzdb          0.4.0   2023-05-12 [1] CRAN (R 4.3.1)\n utf8          1.2.3   2023-01-31 [1] CRAN (R 4.3.1)\n vctrs         0.6.3   2023-06-14 [1] CRAN (R 4.3.1)\n vembedr     * 0.1.5   2021-12-11 [1] CRAN (R 4.3.2)\n withr         2.5.2   2023-10-30 [1] CRAN (R 4.3.2)\n xfun          0.40    2023-08-09 [1] CRAN (R 4.3.1)\n xml2          1.3.6   2023-12-04 [1] CRAN (R 4.3.2)\n xts           0.13.1  2023-04-16 [1] CRAN (R 4.3.2)\n yaml          2.3.7   2023-01-23 [1] CRAN (R 4.3.0)\n zoo           1.8-12  2023-04-13 [1] CRAN (R 4.3.2)\n\n [1] C:/Users/maesu/AppData/Local/R/win-library/4.3\n [2] C:/Program Files/R/R-4.3.1/library\n\n──────────────────────────────────────────────────────────────────────────────"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Paco Te quiero",
+    "section": "",
+    "text": "Hola, soy Javier Mascarell Gallego\nEsta web sirve para presentar el trabajo final individual para la asignatura “Programación y manejo de datos en la era Del Big Data”, optativa de GECO en la Facultad de Economía de la Universitat de València.\nLa web de la asignatura está aquí y los trabajos de mis compañeros de curso puedes verlos aquí.\nMi trabajo lleva por título : “Paco Te quiero”. El objetivo del trabajo es transformar los datos que hay en Spotify for Artists sobre el grupo de música de mi amigo Joan y conseguir una información valiosa a la vez que se utilice esta web para publicitar el grupo.\nEl trabajo puede verse aquí"
+  }
+]
