@@ -1,0 +1,1390 @@
+---
+title: "Paco Te quiero"
+description: "(El grupo de música barcelonés)"
+ 
+author:   
+  - Javier Mascarell (jamasga@alumni.uv.es)
+date: 2024-01-19                    
+categories: [trabajo BigData]     
+image: "imagenes/r_logo.png"
+title-block-banner: true #- {true, false, "green","#AA0000"}
+title-block-banner-color: "#FBFCF5"  
+toc-depth: 3
+smooth-scroll: true
+format: 
+  html:
+    backgroundcolor: "#FBFCF5"
+    embed-resources: true
+    link-external-newwindow: true
+    css: "my_styles.css"   
+code-tools: true
+code-link: true
+---
+
+```{r}
+#| code-fold: true
+#| warning: false
+
+#install.packages("readxl")
+#install.packages("highcharter")
+#install.packages("leaflet")
+#install.packages("osmdata")
+#install.packages("fmsb")
+
+library(tidyverse)
+library(dplyr)
+library(readxl)
+library(highcharter)
+library(leaflet)
+library(osmdata)
+library(vembedr)
+library(fmsb)
+library(knitr)
+
+#Creo un objeto que contiene las fechas de lanzamientos de canciones y otro objeto con las fechas de los conciertos.
+fechas_lanzamiento <- as.Date(c("2022-07-28", "2022-08-25", "2022-10-27", "2023-04-06", "2023-05-25", "2023-07-06", "2023-10-10", "2023-12-07"))
+fechas_lanzamiento <- as.numeric(as.POSIXct(fechas_lanzamiento, origin = "1970-01-01")) * 1000
+
+fechas_conciertos <- as.Date(c("2023-04-21", "2023-07-13", "2023-10-20", "2023-10-25")) # Añade tus fechas de conciertos
+fechas_conciertos <- as.numeric(as.POSIXct(fechas_conciertos, origin = "1970-01-01")) * 1000
+
+
+```
+
+# Resumen del trabajo
+
+Este trabajo individual trata sobre el grupo de música "Paco Te quiero", del cual forma parte mi amigo Joan. Más adelante, se proporciona información detallada sobre este quinteto.
+
+Para la elaboración de todos los gráficos y materiales similares, he utilizado exclusivamente datos de Spotify for Artists. Obtener estos datos no fue tarea sencilla, y pude lograrlo mediante la capacidad de inspeccionar elementos (gráficos web) y limpiarlos con la función de buscar y seleccionar de Word.
+
+
+# Introducción del grupo
+
+[“Paco te quiero”](https://www.instagram.com/pacotequieroo/) es la respuesta a los días de bajona de cinco chavalas y chavales. Letras post adolescentes que giran en torno a las relaciones amorosas y destilan pesimismo, baja autoestima y en ocasiones antipatía. A través de melodías pop y sonidos que rozan el noise, tratan temas como la dependencia emocional, la salud mental o la responsabilidad afectiva. Bajona bailable al fin y al cabo. Recomendamos escuchar  [las canciones](https://open.spotify.com/intl-es/artist/5da84dECf86iCOP1dchjJc) andando de camino a tu casa cuando vuelves de fiesta y te entra la tristeza. 
+
+## Integrantes del grupo
+
+```{r, echo=FALSE, out.width='100%'}
+#| code-fold: true
+#| warning: false
+knitr::include_graphics("imagenes/Integrantes.png")
+```
+
+Sus integrantes lo conforman cinco amigas y amigos. Gloria Ribas (voz), Lucía Matamoros (voz y guitarra), Frans Ribas (guitarra), Joan Martínez (bajo) y Pablo Robres (batería). Todos tienen algo en común y es que aman a Paco, el alter ego canallita del batería del grupo.
+
+# Datos sobre el grupo
+
+```{r}
+#| code-fold: true
+#| warning: false
+
+#Cargamos los datos que contienen las fuentes desde donde provienen cada una de las escuchas, oyentes distintos, escucha por oyente, guardados, playlists y seguidores
+
+Escuchas <-  read_excel("Datos/Escuchas.xlsx")
+Oyentes <-  read_excel("Datos/Oyentes.xlsx")
+E_O <-  read_excel("Datos/E_O.xlsx")
+Guardados <-  read_excel("Datos/Guardados.xlsx")
+Playlists <-  read_excel("Datos/Playlists.xlsx")
+Seguidores <-  read_excel("Datos/Seguidores.xlsx")
+
+#Transformamos el df para convertirlo en Tidy, convertimos los valores de la columna fecha a fecha y cambiamos los nombres.
+
+Escuchas <- pivot_longer(Escuchas, cols = -Fecha, names_to = "Variable", values_to = "Valor")
+
+Escuchas$Fecha <- as.Date(Escuchas$Fecha)
+Escuchas <- Escuchas[!is.na(Escuchas$Valor), ]
+Escuchas <- Escuchas %>%
+  mutate(Variable = case_when(
+    Variable == "T_activas_E" ~ "Todas las fuentes activas",
+    Variable == "Cat_E" ~ "Catalogo y perfil de artista",
+    Variable == "Biblio_E" ~ "Biblioteca y listas del/de la oyente",
+    Variable == "Cola_E" ~ "Cola del/de la oyente",
+    Variable == "T_programadas_E" ~ "Todas las fuentes programadas",
+    Variable == "Editor_E" ~ "Listas editoriales",
+    Variable == "Mixes_E" ~ "Mixes y listas algorítmicas",
+    Variable == "Person_E" ~ "Listas editoriales personalizadas",
+    Variable == "De_otros_E" ~ "Listas de reproducción de otros oyentes",
+    Variable == "Radio_E" ~ "Radio y autoplay",
+    Variable == "Otros_E" ~ "Otros",
+    Variable == "Total_E" ~ "Escuchas totales por dia"))
+
+Oyentes <- pivot_longer(Oyentes, cols = -Fecha, names_to = "Variable", values_to = "Valor")
+
+Oyentes$Fecha <- as.Date(Oyentes$Fecha)
+Oyentes <- Oyentes[!is.na(Oyentes$Valor), ]
+Oyentes <- Oyentes %>%
+  mutate(Variable = case_when(
+    Variable == "T_activas_O" ~ "Todas las fuentes activas",
+    Variable == "Cat_O" ~ "Catalogo y perfil de artista",
+    Variable == "Biblio_O" ~ "Biblioteca y listas del/de la oyente",
+    Variable == "Cola_O" ~ "Cola del/de la oyente",
+    Variable == "T_programadas_O" ~ "Todas las fuentes programadas",
+    Variable == "Editor_O" ~ "Listas editoriales",
+    Variable == "Mixes_O" ~ "Mixes y listas algorítmicas",
+    Variable == "Person_O" ~ "Listas editoriales personalizadas",
+    Variable == "De_otros_O" ~ "Listas de reproducción de otros oyentes",
+    Variable == "Radio_O" ~ "Radio y autoplay",
+    Variable == "Otros_O" ~ "Otros",
+    Variable == "Total_O" ~ "Oyentes totales por dia"))
+
+E_O <- pivot_longer(E_O, cols = -Fecha, names_to = "Variable", values_to = "Valor")
+
+E_O$Fecha <- as.Date(E_O$Fecha)
+E_O <- E_O[!is.na(E_O$Valor), ]
+E_O <- E_O %>%
+  mutate(Variable = case_when(
+    Variable == "T_activas_E" ~ "Todas las fuentes activas",
+    Variable == "Cat_E" ~ "Catalogo y perfil de artista",
+    Variable == "Biblio_E" ~ "Biblioteca y listas del/de la oyente",
+    Variable == "Cola_E" ~ "Cola del/de la oyente",
+    Variable == "T_programadas_E" ~ "Todas las fuentes programadas",
+    Variable == "Editor_E" ~ "Listas editoriales",
+    Variable == "Mixes_E" ~ "Mixes y listas algorítmicas",
+    Variable == "Person_E" ~ "Listas editoriales personalizadas",
+    Variable == "De_otros_E" ~ "Listas de reproducción de otros oyentes",
+    Variable == "Radio_E" ~ "Radio y autoplay",
+    Variable == "Otros_E" ~ "Otros"))
+
+#En estos casos solo hay un dato por fecha, por lo que no es necesario realizar grandes cambios.
+
+Guardados$Fecha <- as.Date(Guardados$Fecha)
+
+Playlists$Fecha <- as.Date(Playlists$Fecha)
+
+Seguidores$Fecha <- as.Date(Seguidores$Fecha)
+
+```
+
+En este apartado que recoge los principales datos diarios del grupo, podemos observar las fuentes desde donde se interactúa con el grupo, es decir, aspectos como las escuchas diarias totales, listas editoriales personalizadas y la cola del oyente. [Aquí](https://support.spotify.com/es/artists/article/source-of-streams/) se puede obtener más información sobre la clasificación que Spotify realiza al respecto. Esta información es bastante relevante, ya que permite conocer cuáles han sido o pueden ser los principales escaparates del grupo y en qué partes de Spotify se pueden llegar a nuevos oyentes o lograr que una canción se destaque.
+
+::: panel-tabset
+
+## Escuchas
+
+```{r}
+#| code-fold: true
+#| warning: false
+
+#Es prácticamente igual que en el caso anterior.Me parecía muy útil, ya que otras gráficas no permiten analizar temporalmente los datos.
+
+p_ESC <- highchart(type = "stock") %>%
+  hc_add_series(Escuchas, "line", hcaes(x = Fecha, y = Valor, group = Variable)) %>%
+  hc_title(text = "Composición de las escuchas") %>%
+  hc_xAxis(
+    type = "datetime",
+    plotLines = c(
+      lapply(fechas_lanzamiento, function(x) list(
+        value = x,
+        width = 2,
+        color = "red"
+      )),
+      lapply(fechas_conciertos, function(x) list(
+        value = x,
+        width = 2,
+        color = "yellow"
+      ))
+    )
+  ) %>%  hc_yAxis(title = list(text = "Valor"), type = "logarithmic", minorTickInterval = "auto") %>%
+  hc_tooltip(shared = TRUE, crosshairs = TRUE) %>%
+  hc_exporting(enabled = TRUE) %>%
+  hc_rangeSelector(
+    enabled = TRUE,
+    selected = 4,
+    buttons = list(
+      list(type = 'month', count = 1, text = '1m'),
+      list(type = 'month', count = 3, text = '3m'),
+      list(type = 'month', count = 6, text = '6m'),
+      list(type = 'year', count = 1, text = '1y'),
+      list(type = 'all', text = 'Todo')
+    )
+  ) %>%
+  hc_navigator(enabled = TRUE) %>%  # Permite el desplazamiento en la barra inferior
+  hc_scrollbar(enabled = TRUE)  # Habilita la barra de desplazamiento
+
+p_ESC
+
+```
+
+## Oyentes
+
+```{r}
+#| code-fold: true
+#| warning: false
+
+p_OYE <- highchart(type = "stock") %>%
+  hc_add_series(Oyentes, "line", hcaes(x = Fecha, y = Valor, group = Variable)) %>%
+  hc_title(text = "Composición de los oyentes") %>%
+  hc_xAxis(
+    type = "datetime",
+    plotLines = c(
+      lapply(fechas_lanzamiento, function(x) list(
+        value = x,
+        width = 2,
+        color = "red"
+      )),
+      lapply(fechas_conciertos, function(x) list(
+        value = x,
+        width = 2,
+        color = "yellow"
+      ))
+    )
+  ) %>%  hc_yAxis(title = list(text = "Valor"), type = "logarithmic", minorTickInterval = "auto") %>%
+  hc_tooltip(shared = TRUE, crosshairs = TRUE) %>%
+  hc_exporting(enabled = TRUE) %>%
+  hc_rangeSelector(
+    enabled = TRUE,
+    selected = 4,
+    buttons = list(
+      list(type = 'month', count = 1, text = '1m'),
+      list(type = 'month', count = 3, text = '3m'),
+      list(type = 'month', count = 6, text = '6m'),
+      list(type = 'year', count = 1, text = '1y'),
+      list(type = 'all', text = 'Todo')
+    )
+  ) %>%
+  hc_navigator(enabled = TRUE) %>%  
+  hc_scrollbar(enabled = TRUE)  
+
+p_OYE
+
+```
+
+## Escuchas/Oyentes
+
+```{r}
+#| code-fold: true
+#| warning: false
+
+p_E_O_ <- highchart(type = "stock") %>%
+  hc_add_series(E_O, "line", hcaes(x = Fecha, y = Valor, group = Variable)) %>%
+  hc_title(text = "Composición de los oyentes") %>%
+  hc_xAxis(
+    type = "datetime",
+    plotLines = c(
+      lapply(fechas_lanzamiento, function(x) list(
+        value = x,
+        width = 2,
+        color = "red"
+      )),
+      lapply(fechas_conciertos, function(x) list(
+        value = x,
+        width = 2,
+        color = "yellow"
+      ))
+    )
+  ) %>%  hc_yAxis(title = list(text = "Valor"), type = "logarithmic", minorTickInterval = "auto") %>%
+  hc_tooltip(shared = TRUE, crosshairs = TRUE) %>%
+  hc_exporting(enabled = TRUE) %>%
+  hc_rangeSelector(
+    enabled = TRUE,
+    selected = 4,
+    buttons = list(
+      list(type = 'month', count = 1, text = '1m'),
+      list(type = 'month', count = 3, text = '3m'),
+      list(type = 'month', count = 6, text = '6m'),
+      list(type = 'year', count = 1, text = '1y'),
+      list(type = 'all', text = 'Todo')
+    )
+  ) %>%
+  hc_navigator(enabled = TRUE) %>%  
+  hc_scrollbar(enabled = TRUE)  
+
+p_E_O_
+
+```
+
+## Guardados
+
+```{r}
+#| code-fold: true
+#| warning: false
+
+p_GUAR <- highchart(type = "stock") %>%
+  hc_add_series(Guardados, "line", hcaes(x = Fecha, y = Valor_G), name = "Nuevos guardados") %>%
+  hc_title(text = "Número de guardados por día") %>%
+  hc_xAxis(
+    type = "datetime",
+    plotLines = c(
+      lapply(fechas_lanzamiento, function(x) list(
+        value = x,
+        width = 2,
+        color = "red"
+      )),
+      lapply(fechas_conciertos, function(x) list(
+        value = x,
+        width = 2,
+        color = "yellow"
+      ))
+    )
+  ) %>%  hc_yAxis(title = list(text = "Valor"), type = "logarithmic", minorTickInterval = "auto") %>%
+  hc_tooltip(shared = TRUE, crosshairs = TRUE) %>%
+  hc_exporting(enabled = TRUE) %>%
+  hc_rangeSelector(
+    enabled = TRUE,
+    selected = 4,
+    buttons = list(
+      list(type = 'month', count = 1, text = '1m'),
+      list(type = 'month', count = 3, text = '3m'),
+      list(type = 'month', count = 6, text = '6m'),
+      list(type = 'year', count = 1, text = '1y'),
+      list(type = 'all', text = 'Todo')
+    )
+  ) %>%
+  hc_navigator(enabled = TRUE) %>%  
+  hc_scrollbar(enabled = TRUE)  
+
+p_GUAR
+
+```
+
+## Playlists
+
+```{r}
+#| code-fold: true
+#| warning: false
+
+p_PLAY <- highchart(type = "stock") %>%
+  hc_add_series(Playlists, "line", hcaes(x = Fecha, y = Valor_P), name = "Nuevas playlists") %>%
+  hc_title(text = "Número de guardados por día") %>%
+  hc_xAxis(
+    type = "datetime",
+    plotLines = c(
+      lapply(fechas_lanzamiento, function(x) list(
+        value = x,
+        width = 2,
+        color = "red"
+      )),
+      lapply(fechas_conciertos, function(x) list(
+        value = x,
+        width = 2,
+        color = "yellow"
+      ))
+    )
+  ) %>%  hc_yAxis(title = list(text = "Valor"), type = "logarithmic", minorTickInterval = "auto") %>%
+  hc_tooltip(shared = TRUE, crosshairs = TRUE) %>%
+  hc_exporting(enabled = TRUE) %>%
+  hc_rangeSelector(
+    enabled = TRUE,
+    selected = 4,
+    buttons = list(
+      list(type = 'month', count = 1, text = '1m'),
+      list(type = 'month', count = 3, text = '3m'),
+      list(type = 'month', count = 6, text = '6m'),
+      list(type = 'year', count = 1, text = '1y'),
+      list(type = 'all', text = 'Todo')
+    )
+  ) %>%
+  hc_navigator(enabled = TRUE) %>%  
+  hc_scrollbar(enabled = TRUE)  
+
+p_PLAY
+
+```
+
+## Seguidores
+
+```{r}
+#| code-fold: true
+#| warning: false
+
+p_SEG <- highchart(type = "stock") %>%
+  hc_add_series(Seguidores, "line", hcaes(x = Fecha, y = Valor_S), name = "Seguidores totales") %>%
+  hc_title(text = "Nº de seguidores totales") %>%
+  hc_xAxis(
+    type = "datetime",
+    plotLines = c(
+      lapply(fechas_lanzamiento, function(x) list(
+        value = x,
+        width = 2,
+        color = "red"
+      )),
+      lapply(fechas_conciertos, function(x) list(
+        value = x,
+        width = 2,
+        color = "yellow"
+      ))
+    )
+  ) %>%  hc_yAxis(title = list(text = "Valor"), type = "logarithmic", minorTickInterval = "auto") %>%
+  hc_tooltip(shared = TRUE, crosshairs = TRUE) %>%
+  hc_exporting(enabled = TRUE) %>%
+  hc_rangeSelector(
+    enabled = TRUE,
+    selected = 4,
+    buttons = list(
+      list(type = 'month', count = 1, text = '1m'),
+      list(type = 'month', count = 3, text = '3m'),
+      list(type = 'month', count = 6, text = '6m'),
+      list(type = 'year', count = 1, text = '1y'),
+      list(type = 'all', text = 'Todo')
+    )
+  ) %>%
+  hc_navigator(enabled = TRUE) %>%  
+  hc_scrollbar(enabled = TRUE)  
+
+p_SEG
+
+```
+
+## Procedimiento
+
+El procedimiento ha sido muy similar al de los datos de las canciones. Se consideró utilizar otro tipo de gráfico, pero por un lado, es difícil hacerlo amigable con tantos datos y, por otro, podría romper un poco con la estética de la página.
+
+Está explicado en el procedimiento de los datos de las canciones.
+
+:::
+
+# Algunas canciones del grupo
+
+## Demolición
+
+Es el segundo adelanto del EP: [‘Adultas depende del día’](https://open.spotify.com/intl-es/album/4f20lPAxbiIpWXrxP1cCp1). A medida que una se convierte en adulta, el concepto de noche cambia. Lo que antes era un simple divertimento, ahora se ha convertido en una vía de escape. De eso va ‘demolición’. De excesos, de falta de amor propio, de adicciones, de descontrol. Del momento exacto en el que uno se da cuenta de que todo ha cambiado.
+
+```{r, out.extra=c('allow="encrypted-media"', 'allowtransparency="true"', 'frameBorder="0"')}
+#| code-fold: true
+#| warning: false
+
+knitr::include_url("https://open.spotify.com/embed/track/61FPKErHn6wh4eGYe9FGTk?utm_source=generator", height = "152")
+```
+
+
+## Becariasoy@gmail.com
+
+Has acabado la carrera. 4 años. Has encontrado prácticas. Son en Madrid. Tú eres de Barcelona. Pero da igual, decides ir. Va bien. Te ascienden. Ahora eres creativo. Te habla tu ex. La de toda la vida. A la cual sigues queriendo. Quedas con ella. Te vuelve a dejar. Y al día siguiente has de ir a trabajar. Y no puedes. Y crees que es temporal. Pero no. A la semana siguiente tampoco puedes. Ni al mes. Lo has dejado todo atrás. Y simplemente no puedes. Y entonces escribo [becariasoy@gmail.com](https://open.spotify.com/intl-es/track/3XCAMyvSxB1XS2LvTnHb90). Y me mudo a Barcelona y la componemos. Guitarra Shoegaze, melodía Pop, estructura Indie; Nuestro nuevo sonido.
+
+```{r, out.extra=c('allow="encrypted-media"', 'allowtransparency="true"', 'frameBorder="0"')}
+#| code-fold: true
+#| warning: false
+
+knitr::include_url("https://open.spotify.com/embed/track/3XCAMyvSxB1XS2LvTnHb90?utm_source=generator&theme=0", height = "152")
+
+```
+
+## Bajona de verano
+
+Trata de abordar el tema de la dependencia emocional. La canción está escrita a través del punto de vista de un personaje, el cual siempre ha recurrido al cariño de la misma persona para animarse y recuperarse en los momentos de bajona. Esta vez, esa persona no está, por lo que por primera vez, deberá enfrentarse a sus fantasmas en solitario, y le resulta imposible.
+
+```{r}
+#| code-fold: true
+#| warning: false
+
+#| echo = FALSE,
+#| out.width = "100%"
+embed_url("https://www.youtube.com/watch?v=Hef7bAt3BWA")
+
+```
+
+# Datos comparando canciones por días
+
+```{r}
+#| code-fold: true
+#| warning: false
+
+A <-  read_excel("Datos/A.xlsx")
+L <-  read_excel("Datos/L.xlsx")
+Be <-  read_excel("Datos/Be.xlsx")
+P <-  read_excel("Datos/P.xlsx")
+H <-  read_excel("Datos/H.xlsx")
+Ba <-  read_excel("Datos/Ba.xlsx")
+M <-  read_excel("Datos/M.xlsx")
+D <-  read_excel("Datos/D.xlsx")
+
+#De esta manera agrupo los df en uno para tener la informacion junta con los datos de todas las canciones.
+df_total <- Reduce(function(x, y) merge(x, y, by = "Fecha", all = TRUE), 
+                    list(A, L, Be, P, H, Ba, M, D))
+
+#Creo estos objetos para poder filtrar las columnas que me interesan.
+c_escuchas <- grep("Escuchas", names(df_total), value = TRUE)
+c_oyentes <- grep("Oyentes", names(df_total), value = TRUE)
+c_e_o <- grep("E_O", names(df_total), value = TRUE)
+c_playlists <- grep("N_playlists", names(df_total), value = TRUE)
+c_guardados <- grep("N_Guardados", names(df_total), value = TRUE)
+
+#Creo un df por cada dato que agrupe todas las canciones y hago pivot longer para que sea tidy y se pueda implementar en los gráficos (una columna para la serie, otra para el eje x y otra para el eje y). También aprovecho para cambiar los nombres.
+#Podría haber cambiado los nombres previamente, pero para mi era menos liante establecer los nombre una vez obtenidos los df.
+df_escuchas <- df_total[, c("Fecha", c_escuchas)]
+df_escuchas <- pivot_longer(df_escuchas, cols = -Fecha, names_to = "Variable", values_to = "Valor")
+
+df_escuchas$Fecha <- as.Date(df_escuchas$Fecha)
+df_escuchas <- df_escuchas[!is.na(df_escuchas$Valor), ]
+df_escuchas <- df_escuchas %>%
+  mutate(Variable = case_when(
+    Variable == "Escuchas_H" ~ "Hoy (Lo siento)",
+    Variable == "Escuchas_M" ~ "Momento Funesto",
+    Variable == "Escuchas_Ba" ~ "Bajona de Verano",
+    Variable == "Escuchas_P" ~ "pase lo que pase",
+    Variable == "Escuchas_D" ~ "demolicion",
+    Variable == "Escuchas_Be" ~ "becariasoy@gmail.com",
+    Variable == "Escuchas_L" ~ "Lo Que Haces Siempre",
+    Variable == "Escuchas_A" ~ "Aunque Tenga Miedo"))
+
+df_oyentes <- df_total[, c("Fecha", c_oyentes)]
+df_oyentes <- pivot_longer(df_oyentes, cols = -Fecha, names_to = "Variable", values_to = "Valor")
+
+df_oyentes$Fecha <- as.Date(df_oyentes$Fecha)
+df_oyentes <- df_oyentes[!is.na(df_oyentes$Valor), ]
+df_oyentes <- df_oyentes %>%
+  mutate(Variable = case_when(
+    Variable == "Oyentes_H" ~ "Hoy (Lo siento)",
+    Variable == "Oyentes_M" ~ "Momento Funesto",
+    Variable == "Oyentes_Ba" ~ "Bajona de Verano",
+    Variable == "Oyentes_P" ~ "pase lo que pase",
+    Variable == "Oyentes_D" ~ "demolicion",
+    Variable == "Oyentes_Be" ~ "becariasoy@gmail.com",
+    Variable == "Oyentes_L" ~ "Lo Que Haces Siempre",
+    Variable == "Oyentes_A" ~ "Aunque Tenga Miedo"))
+
+df_e_o <- df_total[, c("Fecha", c_e_o)]
+df_e_o <- pivot_longer(df_e_o, cols = -Fecha, names_to = "Variable", values_to = "Valor")
+
+df_e_o$Fecha <- as.Date(df_e_o$Fecha)
+df_e_o <- df_e_o[!is.na(df_e_o$Valor), ]
+df_e_o <- df_e_o %>%
+  mutate(Variable = case_when(
+    Variable == "E_O_H" ~ "Hoy (Lo siento)",
+    Variable == "E_O_M" ~ "Momento Funesto",
+    Variable == "E_O_Ba" ~ "Bajona de Verano",
+    Variable == "E_O_P" ~ "pase lo que pase",
+    Variable == "E_O_D" ~ "demolicion",
+    Variable == "E_O_Be" ~ "becariasoy@gmail.com",
+    Variable == "E_O_L" ~ "Lo Que Haces Siempre",
+    Variable == "E_O_A" ~ "Aunque Tenga Miedo"))
+
+df_e_o <- df_total[, c("Fecha", c_e_o)]
+df_e_o <- pivot_longer(df_e_o, cols = -Fecha, names_to = "Variable", values_to = "Valor")
+
+df_e_o$Fecha <- as.Date(df_e_o$Fecha)
+df_e_o <- df_e_o[!is.na(df_e_o$Valor), ]
+df_e_o <- df_e_o %>%
+  mutate(Variable = case_when(
+    Variable == "E_O_H" ~ "Hoy (Lo siento)",
+    Variable == "E_O_M" ~ "Momento Funesto",
+    Variable == "E_O_Ba" ~ "Bajona de Verano",
+    Variable == "E_O_P" ~ "pase lo que pase",
+    Variable == "E_O_D" ~ "demolicion",
+    Variable == "E_O_Be" ~ "becariasoy@gmail.com",
+    Variable == "E_O_L" ~ "Lo Que Haces Siempre",
+    Variable == "E_O_A" ~ "Aunque Tenga Miedo"))
+
+df_playlists <- df_total[, c("Fecha", c_playlists)]
+df_playlists <- pivot_longer(df_playlists, cols = -Fecha, names_to = "Variable", values_to = "Valor")
+
+df_playlists$Fecha <- as.Date(df_playlists$Fecha)
+df_playlists <- df_playlists[!is.na(df_playlists$Valor), ]
+df_playlists <- df_playlists %>%
+  mutate(Variable = case_when(
+    Variable == "N_playlists_H" ~ "Hoy (Lo siento)",
+    Variable == "N_playlists_M" ~ "Momento Funesto",
+    Variable == "N_playlists_Ba" ~ "Bajona de Verano",
+    Variable == "N_playlists_P" ~ "pase lo que pase",
+    Variable == "N_playlists_D" ~ "demolicion",
+    Variable == "N_playlists_Be" ~ "becariasoy@gmail.com",
+    Variable == "N_playlists_L" ~ "Lo Que Haces Siempre",
+    Variable == "N_playlists_A" ~ "Aunque Tenga Miedo"))
+
+df_guardados <- df_total[, c("Fecha", c_guardados)]
+df_guardados <- pivot_longer(df_guardados, cols = -Fecha, names_to = "Variable", values_to = "Valor")
+
+df_guardados$Fecha <- as.Date(df_guardados$Fecha)
+df_guardados <- df_guardados[!is.na(df_guardados$Valor), ]
+df_guardados <- df_guardados %>%
+  mutate(Variable = case_when(
+    Variable == "N_Guardados_H" ~ "Hoy (Lo siento)",
+    Variable == "N_Guardados_M" ~ "Momento Funesto",
+    Variable == "N_Guardados_Ba" ~ "Bajona de Verano",
+    Variable == "N_Guardados_P" ~ "pase lo que pase",
+    Variable == "N_Guardados_D" ~ "demolicion",
+    Variable == "N_Guardados_Be" ~ "becariasoy@gmail.com",
+    Variable == "N_Guardados_L" ~ "Lo Que Haces Siempre",
+    Variable == "N_Guardados_A" ~ "Aunque Tenga Miedo"))
+
+#Aunque lo anterior parezca una redundancia por cambiar los nombre cada vez, para mí es mucho más limpio y me permite organizarme mejor en caso de querer realizar cambios.
+
+```
+
+En este apartado, se han analizado los datos diarios de las canciones del grupo y se han separado en 6 gráficos interactivos. Estos contienen el número de escuchas, oyentes, escuchas por oyente, playlists y guardados. Se han añadido barras rojas verticales que representan el lanzamiento de una nueva canción y barras amarillas que muestran la fecha de un concierto, facilitando la observación de su influencia de manera clara.
+
+Es importante destacar los gráficos del paquete Highcharter (se requiere una licencia), ya que permiten seleccionar un rango de fechas específico y desplazarse a lo largo del tiempo mediante la barra inferior. También permiten visualizar el número concreto de cada serie en un día específico al arrastrar el cursor, descargar una imagen y acceder a los datos, entre otras funcionalidades.
+
+::: panel-tabset
+
+## Escuchas
+
+```{r}
+#| code-fold: true
+#| warning: false
+
+#Para elaborar los gráficos he utilizado el paquete highcharter de la empresa Highchart (es muy utilizado en páginas web con gréficos de activos)
+
+#Este software no es libre para el uso comercial, pero si que permiten su uso bajo en el ámbito académico (Adjunto la licencia en la carpeta)
+
+#He realizado un gráfico por tipo de dato con todas las canciones.
+
+p_escuchas <- highchart(type = "stock") %>%
+  hc_add_series(df_escuchas, "line", hcaes(x = Fecha, y = Valor, group = Variable)) %>% 
+
+#de esta manera puedo añadir una serie junto a los ejes agrupando el color por canciones
+  
+  hc_title(text = "Numero de escuchas por canción") %>%
+  hc_xAxis(
+    type = "datetime", 
+
+#He utilizado esta función para añadir una linea vertical de color rojo en el caso de lanzamientos de canciones y amarillo en el caso de conciertos.
+
+    plotLines = c(
+      lapply(fechas_lanzamiento, function(x) list(
+        value = x,
+        width = 2,
+        color = "red"
+      )),
+      lapply(fechas_conciertos, function(x) list(
+        value = x,
+        width = 2,
+        color = "yellow"
+      ))
+    )
+  ) %>%  hc_yAxis(title = list(text = "Valor"), type = "logarithmic", minorTickInterval = "auto") %>%
+  hc_tooltip(shared = TRUE, crosshairs = TRUE) %>%
+  hc_exporting(enabled = TRUE) %>%
+  hc_rangeSelector(
+    enabled = TRUE,
+    selected = 4,
+    buttons = list(
+      list(type = 'month', count = 1, text = '1m'),
+      list(type = 'month', count = 3, text = '3m'),
+      list(type = 'month', count = 6, text = '6m'),
+      list(type = 'year', count = 1, text = '1y'),
+      list(type = 'all', text = 'Todo')
+    ) 
+
+#Gracias a esta herramienta se puede seleccionar la temporalidad manualmente.
+
+  ) %>%
+  hc_navigator(enabled = TRUE) %>%  
+
+# Permite un desplazamiento en la barra inferior
+  
+  hc_scrollbar(enabled = TRUE)  
+
+# Habilita la barra de desplazamiento
+
+p_escuchas
+
+```
+
+## Oyentes
+
+```{r}
+#| code-fold: true
+#| warning: false
+
+p_oyentes <- highchart(type = "stock") %>%
+  hc_add_series(df_oyentes, "line", hcaes(x = Fecha, y = Valor, group = Variable)) %>%
+  hc_title(text = "Numero de Oyentes por canción") %>%
+  hc_xAxis(
+    type = "datetime",
+    plotLines = c(
+      lapply(fechas_lanzamiento, function(x) list(
+        value = x,
+        width = 2,
+        color = "red"
+      )),
+      lapply(fechas_conciertos, function(x) list(
+        value = x,
+        width = 2,
+        color = "yellow"
+      ))
+    )
+  ) %>%  hc_yAxis(title = list(text = "Valor"), type = "logarithmic", minorTickInterval = "auto") %>%
+  hc_tooltip(shared = TRUE, crosshairs = TRUE) %>%
+  hc_exporting(enabled = TRUE) %>%
+  hc_rangeSelector(
+    enabled = TRUE,
+    selected = 4,
+    buttons = list(
+      list(type = 'month', count = 1, text = '1m'),
+      list(type = 'month', count = 3, text = '3m'),
+      list(type = 'month', count = 6, text = '6m'),
+      list(type = 'year', count = 1, text = '1y'),
+      list(type = 'all', text = 'Todo')
+    )
+  ) %>%
+  hc_navigator(enabled = TRUE) %>%  
+  hc_scrollbar(enabled = TRUE)  
+
+p_oyentes
+
+```
+
+## Escuchas/Oyentes
+
+```{r}
+#| code-fold: true
+#| warning: false
+
+p_e_o <- highchart(type = "stock") %>%
+  hc_add_series(df_e_o, "line", hcaes(x = Fecha, y = Valor, group = Variable)) %>%
+  hc_title(text = "Numero de Escuchas/Oyentes por canción") %>%
+  hc_xAxis(
+    type = "datetime",
+    plotLines = c(
+      lapply(fechas_lanzamiento, function(x) list(
+        value = x,
+        width = 2,
+        color = "red"
+      )),
+      lapply(fechas_conciertos, function(x) list(
+        value = x,
+        width = 2,
+        color = "yellow"
+      ))
+    )
+  ) %>%  hc_yAxis(title = list(text = "Valor"), type = "logarithmic", minorTickInterval = "auto") %>%
+  hc_tooltip(shared = TRUE, crosshairs = TRUE) %>%
+  hc_exporting(enabled = TRUE) %>%
+  hc_rangeSelector(
+    enabled = TRUE,
+    selected = 4,
+    buttons = list(
+      list(type = 'month', count = 1, text = '1m'),
+      list(type = 'month', count = 3, text = '3m'),
+      list(type = 'month', count = 6, text = '6m'),
+      list(type = 'year', count = 1, text = '1y'),
+      list(type = 'all', text = 'Todo')
+    )
+  ) %>%
+  hc_navigator(enabled = TRUE) %>%  
+  hc_scrollbar(enabled = TRUE)  
+
+p_e_o
+
+```
+
+## Playlists
+
+```{r}
+#| code-fold: true
+#| warning: false
+
+p_playlists <- highchart(type = "stock") %>%
+  hc_add_series(df_playlists, "line", hcaes(x = Fecha, y = Valor, group = Variable)) %>%
+  hc_title(text = "Numero de Playlists nuevas por canción") %>%
+  hc_xAxis(
+    type = "datetime",
+    plotLines = c(
+      lapply(fechas_lanzamiento, function(x) list(
+        value = x,
+        width = 2,
+        color = "red"
+      )),
+      lapply(fechas_conciertos, function(x) list(
+        value = x,
+        width = 2,
+        color = "yellow"
+      ))
+    )
+  ) %>%  hc_yAxis(title = list(text = "Valor"), type = "logarithmic", minorTickInterval = "auto") %>%
+  hc_tooltip(shared = TRUE, crosshairs = TRUE) %>%
+  hc_exporting(enabled = TRUE) %>%
+  hc_rangeSelector(
+    enabled = TRUE,
+    selected = 4,
+    buttons = list(
+      list(type = 'month', count = 1, text = '1m'),
+      list(type = 'month', count = 3, text = '3m'),
+      list(type = 'month', count = 6, text = '6m'),
+      list(type = 'year', count = 1, text = '1y'),
+      list(type = 'all', text = 'Todo')
+    )
+  ) %>%
+  hc_navigator(enabled = TRUE) %>%  
+  hc_scrollbar(enabled = TRUE)  
+
+p_playlists
+
+```
+
+## Guardados
+
+```{r}
+#| code-fold: true
+#| warning: false
+
+p_guardados <- highchart(type = "stock") %>%
+  hc_add_series(df_guardados, "line", hcaes(x = Fecha, y = Valor, group = Variable)) %>%
+  hc_title(text = "Numero de nuevos Guardados por canción") %>%
+  hc_xAxis(
+    type = "datetime",
+    plotLines = c(
+      lapply(fechas_lanzamiento, function(x) list(
+        value = x,
+        width = 2,
+        color = "red"
+      )),
+      lapply(fechas_conciertos, function(x) list(
+        value = x,
+        width = 2,
+        color = "yellow"
+      ))
+    )
+  ) %>%  hc_yAxis(title = list(text = "Valor"), type = "logarithmic", minorTickInterval = "auto") %>%
+  hc_tooltip(shared = TRUE, crosshairs = TRUE) %>%
+  hc_exporting(enabled = TRUE) %>%
+  hc_rangeSelector(
+    enabled = TRUE,
+    selected = 4,
+    buttons = list(
+      list(type = 'month', count = 1, text = '1m'),
+      list(type = 'month', count = 3, text = '3m'),
+      list(type = 'month', count = 6, text = '6m'),
+      list(type = 'year', count = 1, text = '1y'),
+      list(type = 'all', text = 'Todo')
+    )
+  ) %>%
+  hc_navigator(enabled = TRUE) %>%  
+  hc_scrollbar(enabled = TRUE)  
+
+p_guardados
+
+```
+
+## Procedimiento
+
+Para elaborar este gráfico, en primer lugar, se obtuvieron los datos, una tarea que ocupó la mayor parte del tiempo. En Spotify for Artists solo se pueden descargar los datos de las escuchas, y como no se quería hacer uso de la API key, fue necesario utilizar "inspeccionar elemento" en el gráfico de cada canción (un gráfico por cada tipo de número). Una vez encontrada la parte del código que contenía los datos, se copiaron y pegaron en Word para utilizar la herramienta de buscar y seleccionar, dejando únicamente los datos con sus fechas. Posteriormente, se pegaron los datos ya ordenados en una hoja de Excel.
+
+Para desarrollarlos, se separaron los dataframes según el gráfico que se deseaba obtener. Se convirtieron las columnas con los nombres de las canciones (series) en una sola columna, los datos (eje y) en otra mediante pivot longer y se utilizó la columna de fecha como eje x. En cuanto al Highchart, se destaca que está en escala logarítmica para reducir las diferencias visuales y apreciar mejor los cambios y pequeños detalles. También se añadieron todas las herramientas externas, como la elección de la temporalidad.
+
+:::
+
+# Comparación entre canciones (No temporal)
+
+```{r}
+#| code-fold: true
+#| warning: false
+
+#Aquí encontramos estadísticas básicas como máximo, mediana y desviación típica, según escuchas, oyentes, playlists y guardados. 
+
+Compar_E <-  read_excel("Datos/Compar_E.xlsx")
+Compar_O <-  read_excel("Datos/Compar_O.xlsx")
+Compar_P <-  read_excel("Datos/Compar_P.xlsx")
+Compar_G <-  read_excel("Datos/Compar_G.xlsx")
+
+#En este caso lo he convertido a tidy y he convertifo los valores de la desviación típica a porcentaje.
+
+Compar_E <- pivot_longer(Compar_E, cols = -Cancion, names_to = "Variable", values_to = "Valor") %>%
+  mutate(Valor = ifelse(Variable == "Desviacion_tipica", Valor * 100, Valor)) %>%
+  mutate(Valor = as.numeric(Valor))  # Convertir a numérico 
+
+Compar_O <- pivot_longer(Compar_O, cols = -Cancion, names_to = "Variable", values_to = "Valor") %>%
+  mutate(Valor = ifelse(Variable == "Desviacion_tipica", Valor * 100, Valor)) %>%
+  mutate(Valor = as.numeric(Valor))  
+
+Compar_P <- pivot_longer(Compar_P, cols = -Cancion, names_to = "Variable", values_to = "Valor") %>%
+  mutate(Valor = ifelse(Variable == "Desviacion_tipica", Valor * 100, Valor)) %>%
+  mutate(Valor = as.numeric(Valor))  
+
+Compar_G <- pivot_longer(Compar_G, cols = -Cancion, names_to = "Variable", values_to = "Valor") %>%
+  mutate(Valor = ifelse(Variable == "Desviacion_tipica", Valor * 100, Valor)) %>%
+  mutate(Valor = as.numeric(Valor))  
+
+#Convierto los valores a absolutos para evitar decimales muy largos de la desviación típica
+
+Compar_E <- transform(Compar_E, Valor = abs(Valor))
+
+Compar_E$Valor <- as.integer(Compar_E$Valor)
+
+#He convertido los df a gráficos de barra, dónde las barras se agrupan por canciones y se subdividen por colores según la métrica.
+
+p_COMP_E <- hchart(Compar_E, "column", hcaes(x = Cancion, y = Valor, group = Variable)) %>%
+  hc_plotOptions(column = list(
+    dataLabels = list(
+      enabled = TRUE,
+      formatter = JS("function() {
+                     if (this.series.name === 'Desviacion_tipica') {
+                        return Highcharts.numberFormat(this.y, 1) + '%';
+                     } else {
+                        return Highcharts.numberFormat(this.y, 1);
+                     }
+                  }")
+    ),
+    grouping = TRUE,
+    shadow = FALSE
+  )) %>%
+  hc_title(text = "Comparación de Escuchas entre canciones") %>%
+  hc_xAxis(title = list(text = "Canción")) %>%
+  hc_yAxis(title = list(text = "Valor"), type = "logarithmic", minorTickInterval = "auto") %>%
+  hc_legend(enabled = FALSE)  # Ocultar la leyenda
+
+Compar_O <- transform(Compar_O, Valor = abs(Valor))
+
+Compar_O$Valor <- as.integer(Compar_O$Valor)
+
+p_COMP_O <- hchart(Compar_O, "column", hcaes(x = Cancion, y = Valor, group = Variable)) %>%
+  hc_plotOptions(column = list(
+    dataLabels = list(
+      enabled = TRUE,
+      formatter = JS("function() {
+                     if (this.series.name === 'Desviacion_tipica') {
+                        return Highcharts.numberFormat(this.y, 1) + '%';
+                     } else {
+                        return Highcharts.numberFormat(this.y, 1);
+                     }
+                  }")
+    ),
+    grouping = TRUE,
+    shadow = FALSE
+  )) %>%
+  hc_title(text = "Comparación de Oyentes entre canciones") %>%
+  hc_xAxis(title = list(text = "Canción")) %>%
+  hc_yAxis(title = list(text = "Valor"), type = "logarithmic", minorTickInterval = "auto") %>%
+  hc_legend(enabled = FALSE)  # Ocultar la leyenda
+
+Compar_P <- transform(Compar_P, Valor = abs(Valor))
+
+Compar_P$Valor <- as.integer(Compar_P$Valor)
+
+p_COMP_P <- hchart(Compar_P, "column", hcaes(x = Cancion, y = Valor, group = Variable)) %>%
+  hc_plotOptions(column = list(
+    dataLabels = list(
+      enabled = TRUE,
+      formatter = JS("function() {
+                     if (this.series.name === 'Desviacion_tipica') {
+                        return Highcharts.numberFormat(this.y, 1) + '%';
+                     } else {
+                        return Highcharts.numberFormat(this.y, 1);
+                     }
+                  }")
+    ),
+    grouping = TRUE,
+    shadow = FALSE
+  )) %>%
+  hc_title(text = "Comparación de Playlists entre canciones") %>%
+  hc_xAxis(title = list(text = "Canción")) %>%
+  hc_yAxis(title = list(text = "Valor"), type = "logarithmic", minorTickInterval = "auto") %>%
+  hc_legend(enabled = FALSE)  # Ocultar la leyenda
+
+p_COMP_G <- hchart(Compar_G, "column", hcaes(x = Cancion, y = Valor, group = Variable)) %>%
+  hc_plotOptions(column = list(
+    dataLabels = list(
+      enabled = TRUE,
+      formatter = JS("function() {
+                     if (this.series.name === 'Desviacion_tipica') {
+                        return Highcharts.numberFormat(this.y, 1) + '%';
+                     } else {
+                        return Highcharts.numberFormat(this.y, 1);
+                     }
+                  }")
+    ),
+    grouping = TRUE,
+    shadow = FALSE
+  )) %>%
+  hc_title(text = "Comparación de Guardados entre canciones") %>%
+  hc_xAxis(title = list(text = "Canción")) %>%
+  hc_yAxis(title = list(text = "Valor"), type = "logarithmic", minorTickInterval = "auto") %>%
+  hc_legend(enabled = FALSE)  # Ocultar la leyenda
+
+```
+
+En estos gráficos, podemos observar diferencias estadísticas entre las canciones para tener una visión más general. Estos datos incluyen el máximo histórico, la desviación típica sobre su media para determinar cuáles son las canciones con más estabilidad y cuáles son más fluctuantes, y por último, la mediana, que es más representativa que la media (aunque tiene cierta distorsión, ya que las canciones más nuevas tienden a tener una mayor).
+
+Para esta comparación, he utilizado un gráfico de barras, ya que considero que es la mejor herramienta para comparar pocos datos que no tienen una serie temporal.
+
+::: panel-tabset
+
+## Escuchas
+
+```{r}
+#| code-fold: true
+#| warning: false  
+#| column: screen-inset-shaded
+#| layout-nrow: 2
+
+par(mfrow = c(2, 2))
+
+p_COMP_E
+
+p_COMP_O
+
+p_COMP_P
+
+p_COMP_G
+
+```
+
+
+## Procedimiento
+
+En primer lugar, he tenido que realizar un pivot longer para tener un dataframe tidy. También he convertido a porcentaje los valores de la desviación típica. Una vez obtenidos los dataframes, he creado los gráficos con Highcharter. En ellos, he añadido el símbolo % a los valores de desviación típica y he convertido los gráficos a una escala logarítmica, ya que había una gran diferencia entre los valores máximos y la mediana.
+
+:::
+
+# Mapa geográfico de los oyentes
+
+```{r}
+#| code-fold: true
+#| warning: false
+
+#Este ha sido un trabajo arduo, pues con la herramienta osmdata he conseguido las coordenadas da cada una de las 48 ciudades con más oyentes del mundo en los últimos 28 días. Creando un punto medio y añadiendo a un df las longitudes y latitudes obtenidas he podido lograr el df requerido para hacer el leaflet.
+
+# coords_barcelona <- osmdata::getbb("Barcelona, Spain", format_out = "matrix")
+# coords_madrid <- osmdata::getbb("Madrid, Spain", format_out = "matrix")
+# coords_valencia <- osmdata::getbb("Valencia, Spain", format_out = "matrix")
+# coords_zaragoza <- osmdata::getbb("Zaragoza, Spain", format_out = "matrix")
+# coords_malaga <- osmdata::getbb("Málaga, Spain", format_out = "matrix")
+# coords_bilbao <- osmdata::getbb("Bilbao, Spain", format_out = "matrix")
+# coords_sevilla <- osmdata::getbb("Sevilla, Spain", format_out = "matrix")
+# coords_valladolid <- osmdata::getbb("Valladolid, Spain", format_out = "matrix")
+# coords_murcia <- osmdata::getbb("Murcia, Spain", format_out = "matrix")
+# coords_alicante <- osmdata::getbb("Alicante, Spain", format_out = "matrix")
+# coords_vigo <- osmdata::getbb("Vigo, Spain", format_out = "matrix")
+# coords_la_corunya <- osmdata::getbb("La Coruña, Spain", format_out = "matrix")
+# coords_buenos_aires <- osmdata::getbb("Buenos Aires, Argentina", format_out = "matrix")
+# coords_bogota <- osmdata::getbb("Bogotá, Colombia", format_out = "matrix")
+# coords_santiago_de_chile <- osmdata::getbb("Santiago de Chile, Chile", format_out = "matrix")
+# coords_vitoria <- osmdata::getbb("Vitoria, Spain", format_out = "matrix")
+# coords_alcala <- osmdata::getbb("Alcalá de Henares, Spain", format_out = "matrix")
+# coords_granada <- osmdata::getbb("Granada, Spain", format_out = "matrix")
+# coords_santiago_de_compostela <- osmdata::getbb("Santiago de Compostela, Spain", format_out = "matrix")
+# coords_sanse <- osmdata::getbb("San Sebastián, Spain", format_out = "matrix")
+# coords_pamplona <- osmdata::getbb("Pamplona, Spain", format_out = "matrix")
+# coords_sant_cugat <- osmdata::getbb("Sant Cugat, Spain", format_out = "matrix")
+# coords_albacete <- osmdata::getbb("Albacete, Spain", format_out = "matrix")
+# coords_lima <- osmdata::getbb("Lima, Peru", format_out = "matrix")
+# coords_elche <- osmdata::getbb("Elche, Spain", format_out = "matrix")
+# coords_salamanca <- osmdata::getbb("Salamanca, Spain", format_out = "matrix")
+# coords_gijon <- osmdata::getbb("Gijón, Spain", format_out = "matrix")
+# coords_sabadell <- osmdata::getbb("Sabadell, Spain", format_out = "matrix")
+# coords_leon <- osmdata::getbb("León, Spain", format_out = "matrix")
+# coords_palencia <- osmdata::getbb("Palencia, Spain", format_out = "matrix")
+# coords_gandia <- osmdata::getbb("Gandía, Spain", format_out = "matrix")
+# coords_terrassa <- osmdata::getbb("Terrassa, Spain", format_out = "matrix")
+# coords_tarragona <- osmdata::getbb("Tarragona, Spain", format_out = "matrix")
+# coords_cordoba <- osmdata::getbb("Córdoba, Spain", format_out = "matrix")
+# coords_guadalajara <- osmdata::getbb("Guadalajara, Spain", format_out = "matrix")
+# coords_palmas <- osmdata::getbb("Las Palmas de Gran Canaria, Spain", format_out = "matrix")
+# coords_santander <- osmdata::getbb("Santander, Spain", format_out = "matrix")
+# coords_getafe <- osmdata::getbb("Getafe, Spain", format_out = "matrix")
+# coords_munich <- osmdata::getbb("Munich, Germany", format_out = "matrix")
+# coords_delegacion <- osmdata::getbb("Gustavo A. Madero, Mexico", format_out = "matrix")
+# coords_majadahonda <- osmdata::getbb("Majadahonda, Spain", format_out = "matrix")
+# coords_sanfeliu <- osmdata::getbb("San Feliú de Llobregat, Spain", format_out = "matrix")
+# coords_burgos <- osmdata::getbb("Burgos, Spain", format_out = "matrix")
+# coords_oviedo <- osmdata::getbb("Oviedo, Spain", format_out = "matrix")
+# coords_lleida <- osmdata::getbb("Lleida, Spain", format_out = "matrix")
+# coords_badalona <- osmdata::getbb("Badalona, Spain", format_out = "matrix")
+# coords_santboi <- osmdata::getbb("Sant Boi de Llobregat, Spain", format_out = "matrix")
+# coords_laguna <- osmdata::getbb("Laguna de Duero, Spain", format_out = "matrix")
+# coords_torrejon <- osmdata::getbb("Torrejón de Ardoz", format_out = "matrix")
+
+
+# midpoint <- function(bb) {
+#   c(lon = mean(c(bb[1], bb[3])), lat = mean(c(bb[2], bb[4])))
+# }
+
+
+# barcelona_center <- midpoint(coords_barcelona)
+# madrid_center <- midpoint(coords_madrid)
+# valencia_center <- midpoint(coords_valencia)
+# zaragoza_center <- midpoint(coords_zaragoza)
+# malaga_center <- midpoint(coords_malaga)
+# bilbao_center <- midpoint(coords_bilbao)
+# sevilla_center <- midpoint(coords_sevilla)
+# valladolid_center <- midpoint(coords_valladolid)
+# murcia_center <- midpoint(coords_murcia)
+# alicante_center <- midpoint(coords_alicante)
+# vigo_center <- midpoint(coords_vigo)
+# la_corunya_center <- midpoint(coords_la_corunya)
+# buenos_aires_center <- midpoint(coords_buenos_aires)
+# bogota_center <- midpoint(coords_bogota)
+# santiago_de_chile_center <- midpoint(coords_santiago_de_chile)
+# vitoria_center <- midpoint(coords_vitoria)
+# alcala_center <- midpoint(coords_alcala)
+# granada_center <- midpoint(coords_granada)
+# santiago_de_compostela_center <- midpoint(coords_santiago_de_compostela)
+# sanse_center <- midpoint(coords_sanse)
+# pamplona_center <- midpoint(coords_pamplona)
+# sant_cugat_center <- midpoint(coords_sant_cugat)
+# albacete_center <- midpoint(coords_albacete)
+# lima_center <- midpoint(coords_lima)
+# elche_center <- midpoint(coords_elche)
+# salamanca_center <- midpoint(coords_salamanca)
+# gijon_center <- midpoint(coords_gijon)
+# sabadell_center <- midpoint(coords_sabadell)
+# leon_center <- midpoint(coords_leon)
+# palencia_center <- midpoint(coords_palencia)
+# gandia_center <- midpoint(coords_gandia)
+# terrassa_center <- midpoint(coords_terrassa)
+# tarragona_center <- midpoint(coords_tarragona)
+# cordoba_center <- midpoint(coords_cordoba)
+# guadalajara_center <- midpoint(coords_guadalajara)
+# palmas_center <- midpoint(coords_palmas)
+# santander_center <- midpoint(coords_santander)
+# getafe_center <- midpoint(coords_getafe)
+# munich_center <- midpoint(coords_munich)
+# delegacion_center <- midpoint(coords_delegacion)
+# majadahonda_center <- midpoint(coords_majadahonda)
+# sanfeliu_center <- midpoint(coords_sanfeliu)
+# burgos_center <- midpoint(coords_burgos)
+# oviedo_center <- midpoint(coords_oviedo)
+# lleida_center <- midpoint(coords_lleida)
+# badalona_center <- midpoint(coords_badalona)
+# santboi_center <- midpoint(coords_santboi)
+# laguna_center <- midpoint(coords_laguna)
+# torrejon_center <- midpoint(coords_torrejon)
+# 
+# 
+# 
+# ciudades_coords <- data.frame(
+#   Ciudad = c("Barcelona", "Madrid", "Valencia", "Zaragoza", "Málaga", "Bilbao", "Sevilla", "Valladolid", "Murcia", "Alicante", "Vigo", "La Coruña", "Buenos Aires", "Bogotá", "Santiago de Chile", "Vitoria", "Alcalá de Henares", "Granada", "Santiago de Compostela", "San Sebastián", "Pamplona", "Sant Cugat", "Albacete", "Lima", "Elche", "Salamanca", "Gijón", "Sabadell", "León", "Palencia", "Gandía", "Terrassa", "Tarragona", "Córdoba", "Guadalajara", "Las Palmas de Gran Canaria", "Santander", "Getafe", "Múnich", "Delegación Gustavo A. Madero", "Majadahonda", "San Feliú de Llobregat", "Burgos", "Oviedo", "Lleida", "Badalona", "Sant Boi de Llobregat", "Laguna de Duero", "Torrejón de Ardoz"),
+
+   
+#   Lon = c(barcelona_center[1], madrid_center[1], valencia_center[1],
+# zaragoza_center[1], malaga_center[1], bilbao_center[1], sevilla_center[1], valladolid_center[1], murcia_center[1], alicante_center[1], vigo_center[1], la_corunya_center[1], buenos_aires_center[1], bogota_center[1], santiago_de_chile_center[1], vitoria_center[1], alcala_center[1], granada_center[1], santiago_de_compostela_center[1], sanse_center[1], pamplona_center[1], sant_cugat_center[1], albacete_center[1], lima_center[1], elche_center[1], salamanca_center[1],
+# gijon_center[1], sabadell_center[1], leon_center[1], palencia_center[1],
+# gandia_center[1], terrassa_center[1], tarragona_center[1], cordoba_center[1], guadalajara_center[1], palmas_center[1], santander_center[1], getafe_center[1], munich_center[1], delegacion_center[1], majadahonda_center[1], sanfeliu_center[1], burgos_center[1], oviedo_center[1], lleida_center[1], badalona_center[1], santboi_center[1], laguna_center[1], torrejon_center[1]),
+
+
+# Lat = c(barcelona_center[2], madrid_center[2], valencia_center[2],
+# zaragoza_center[2], malaga_center[2], bilbao_center[2], sevilla_center[2], valladolid_center[2], murcia_center[2], alicante_center[2], vigo_center[2], la_corunya_center[2], buenos_aires_center[2], bogota_center[2], santiago_de_chile_center[2], vitoria_center[2], alcala_center[2], granada_center[2], santiago_de_compostela_center[2], sanse_center[2], pamplona_center[2], sant_cugat_center[2], albacete_center[2], lima_center[2], elche_center[2], salamanca_center[2],
+# gijon_center[2], sabadell_center[2], leon_center[2], palencia_center[2],
+# gandia_center[2], terrassa_center[2], tarragona_center[2], cordoba_center[2], guadalajara_center[2], palmas_center[2], santander_center[2], getafe_center[2], munich_center[2], delegacion_center[2], majadahonda_center[2], sanfeliu_center[2], burgos_center[2], oviedo_center[2], lleida_center[2], badalona_center[2], santboi_center[2], laguna_center[2], torrejon_center[2]))
+
+
+# #library(openxlsx)
+# ruta_archivo <- "Datos/ciudades_coords.xlsx"
+# write.xlsx(ciudades_coords, file = ruta_archivo)
+
+## Para evitar que la página deba cargar todo lo anterior he generado un excel sobre el df con las coordenadas
+
+Demografia <-  read_excel("Datos/Demografia.xlsx")
+ciudades_coords <- read_excel("Datos/ciudades_coords.xlsx")
+
+df_coord <- left_join(Demografia, ciudades_coords, by = "Ciudad")
+
+```
+
+En este mapamundi, podemos observar las ciudades/municipios con el mayor número de oyentes del grupo durante el mes de diciembre. En color rojo están las ciudades que han tenido más de 100 oyentes, en color azul las que han tenido entre 10 y 100 oyentes, y en color verde las ciudades que han tenido menos de 10 oyentes. Las ciudades con más oyentes en diciembre fueron Barcelona con 345 oyentes y Madrid con 311.
+
+::: panel-tabset
+
+## Mapa con numero de oyentes en Diciembre
+
+```{r}
+#| code-fold: true
+#| warning: false
+
+map <- leaflet(df_coord) %>% 
+  addTiles() %>%  # Añadir las tiles básicas del mapa
+  
+# Para añadir marcadores circulares según el grupo
+  
+  addCircleMarkers(
+    ~Lon, ~Lat,  # Coordenadas
+    color = ~case_when(
+      Grupo == "Ultra fans" ~ "red", #Más de 100 oyentes
+      Grupo == "Muy fans" ~ "blue", #10 oyentes o más hasta 100
+      Grupo == "Fans" ~ "green", #Menos de 10 oyentes
+      TRUE ~ "gray"  # Por defecto para otros grupos
+    ),
+    popup = ~paste(Ciudad, Oyentes),  # Texto emergente
+    radius = 8  # Tamaño del marcador
+  )
+
+map
+
+```
+
+## Procedimiento
+
+Para realizar este Leaflet, en primer lugar, he tenido que obtener las latitudes y longitudes de cada ciudad mediante el paquete osmdata. Sin embargo, también he tenido que encontrar los puntos medios de esas medidas y añadirlos al dataframe con los datos. Una vez obtenido el dataframe necesario, he generado el Leaflet añadiendo círculos de colores según el grupo al que pertenecía cada ciudad, con el tamaño deseado y una etiqueta con el número de oyentes en cada ciudad.
+
+:::
+
+# Demografría
+
+```{r}
+#| code-fold: true
+#| warning: false
+
+# Aprovechando que son pocos datos y no los tengo, he creado el df a mano para prácticar
+
+Edad_b <- data.frame(
+  row.names = c("a18_22", "a23_27", "a28_34", "a35_44", "a45_59", "aMas_60"),
+  Mujer = c(78, 172, 153, 89, 84, 18),
+  Hombre = c(53, 136, 172, 142, 168, 21),
+  Sin_especificar = c(2, 1, 7, 5, 4, 2),
+  No_binario = c(8, 16, 8, 9, 2, 0))
+
+# Marcarmos los valores maximos y minimos para poder elaborar el gráfico de araña
+
+max_min <- data.frame(
+  Mujer = c(172, 0), Hombre = c(172, 0), Sin_especificar = c(7, 0), No_binario = c(16, 0)
+)
+
+# Para añadir las filas al df final
+
+rownames(max_min) <- c("Max", "Min")
+edad_bien <- rbind(max_min, Edad_b)
+
+# Seleccionamos únicamente los datos de 18 a 22 años y así sucesivamente.
+
+a18_22_data <- edad_bien[c("Max", "Min", "a18_22"), ]
+
+a23_27_data <- edad_bien[c("Max", "Min", "a23_27"), ]
+
+a28_34_data <- edad_bien[c("Max", "Min", "a28_34"), ]
+
+a35_44_data <- edad_bien[c("Max", "Min", "a35_44"), ]
+
+a45_59_data <- edad_bien[c("Max", "Min", "a45_59"), ]
+
+aMas_60_data <- edad_bien[c("Max", "Min", "aMas_60"), ]
+
+
+```
+
+Se han tomado los datos del número de oyentes en el mes de diciembre según su género y la franja de edad a la que pertenecen.
+
+Mediante estos gráficos radiales con forma de tela de araña podemos observar cuanto se acerca o aleja dicho género en esa franja de edad frente al máximo registrado de ese genero en cualquier grupo de edad.
+
+Pongo varios ejemplos para que se entienda. En el grupo de 18 a 22 años de edad observamos que los puntos negros no se alejan mucho del centro, esto se debe a que es un grupo poco numeroso relativamente al resto de grupos de edad, por ejemplo, en este grupo se han observado 53 hombres (muy lejos del máximo de 172 hombres registrados de los 28 a 34 años). Otro ejemplo podría ser en el grupo de 23 a 27 años, donde encontramos los máximos registrados de mujeres (172) y de no binario (16), por lo tanto viendo el gráfico tambien podemos intuir que este grupo de edad es de los más numerosos, ya que sus 4 valores se alejan bastante del centro.
+
+::: panel-tabset
+
+## 18 a 22
+
+```{r}
+#| code-fold: true
+#| warning: false 
+p18_22 <- radarchart(
+  a18_22_data,
+  title = "De 18 a 22 años",
+  cglcol = "orange", #Color de los bordes del gráfico
+  cglty = 2, #Permite obtener patrones separados
+  cglwd = 2, #Permite ajustar la separacion
+  plwd = 2, #Permite añadir el grosor
+  pfcol = "#EED9AD80"  # Color del fondo interno del polígono
+)
+radarchart(p18_22)
+```
+
+## 23 a 27
+
+```{r}
+#| code-fold: true
+#| warning: false
+
+p23_27 <- radarchart(
+  a23_27_data,
+  title = "De 23 a 27 años",
+  cglcol = "green",
+  cglty = 2,
+  cglwd = 2,
+  plwd = 2,
+  pfcol = "#D7EEAD80"  
+)
+radarchart(p23_27)
+
+```
+
+## 28 a 34
+
+```{r}
+#| code-fold: true
+#| warning: false
+
+p28_34 <- radarchart(
+  a28_34_data,
+  title = "De 28 a 34 años",
+  cglcol = "pink",
+  cglty = 2,
+  cglwd = 2,
+  plwd = 2,
+  pfcol = "#EED3F180" 
+)
+radarchart(p28_34)
+
+```
+
+## 35 a 44
+
+```{r}
+#| code-fold: true
+#| warning: false
+
+p35_44 <- radarchart(
+  a35_44_data,
+  title = "De 35 a 44 años",
+  cglcol = "blue",
+  cglty = 2,
+  cglwd = 2,
+  plwd = 2,
+  pfcol = "#D3E3F180"
+)
+radarchart(p35_44)
+
+```
+
+## 45 a 59
+
+```{r}
+#| code-fold: true
+#| warning: false
+
+p45_59 <- radarchart(
+  a45_59_data,
+  title = "De 45 a 59 años",
+  cglcol = "red",
+  cglty = 2,
+  cglwd = 2,
+  plwd = 2,
+  pfcol = "#EDBDBD80" 
+)
+radarchart(p45_59)
+
+```
+
+## Más de 60
+
+```{r}
+#| code-fold: true
+#| warning: false
+
+pMas_60 <- radarchart(
+  aMas_60_data,
+  title = "Más de 60 años",
+  cglcol = "purple",
+  cglty = 2,
+  cglwd = 2,
+  plwd = 2,
+  pfcol = "#D7BDED80"  
+)
+radarchart(pMas_60)
+
+```
+
+:::
+
+## Procedimiento
+
+Para elaborar estos gráficos radiales (o spiderweb) con forma de diamante, he creado los dataframes mediante R, ya que eran pocos datos y no era muy costoso hacerlo a mano. Además, generé otro dataframe con los valores máximos registrados, estableciendo 0 como el valor mínimo. Una vez creados, los uní para obtener el dataframe con todos los datos necesarios.
+
+Posteriormente, filtré los dataframes por rango de edad y valores máximos y mínimos para crear los radarcharts. Me hubiera gustado colocarlos en formaciones de dos mediante la función "#| layout-nrow: 2", pero debido a algún problema con el paquete, probablemente se veían mal al reducir su tamaño. A pesar de mi preferencia, opté por utilizar panel-tabset.
+
+
+<br>
+
+----------------------
+
+<br>
+
+
+## Información sobre la sesión
+
+Entorno de trabajo y paquetes utilizados
+
+```{r}
+#| echo: false
+sessioninfo::session_info() %>% 
+  details::details(summary = 'current session info') 
+```
+
