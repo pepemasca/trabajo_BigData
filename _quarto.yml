@@ -1,0 +1,75 @@
+project:                
+  type: website          
+  output-dir: docs       
+
+website:
+  title: "Paco Te Quiero" 
+  favicon: "imagenes/r_logo.png"     
+  search:   
+    location: navbar
+    type: overlay   
+    copy-button: true
+  navbar:
+    foreground: "#FDCCFF"
+    left: 
+      - icon: house-door
+        href: index.html
+    right:
+      - text: "Trabajo individual"
+        href: my_trabajo_BigData.qmd
+      - icon: spotify
+        href: https://open.spotify.com/intl-es/artist/5da84dECf86iCOP1dchjJc
+      - icon: instagram
+        href: https://www.instagram.com/pacotequieroo/
+      - icon: github
+        href: https://github.com/pepemasca
+      - icon: envelope
+        url: "mailto:jamasga@alumni.uv.es"
+  page-footer:
+    border: true
+    background: "#FF8300"       
+    left: "© 2023 Javier Mascarell, Joan Martínez"   
+    center: "Hecho con [Quarto](https://quarto.org)"
+    right:
+      - icon: spotify
+        href: https://open.spotify.com/intl-es/artist/5da84dECf86iCOP1dchjJc
+      - icon: instagram
+        href: https://www.instagram.com/pacotequieroo/
+      - icon: github
+        href: https://github.com/pepemasca     
+      - icon: envelope
+        url: "mailto:jamasga@alumni.uv.es"         
+    
+
+format:
+  html:
+    theme: flatly         #- https://quarto.org/docs/output-formats/html-themes.html
+    mainfont: Baskerville
+    highlight-style: a10y   
+    css: my_styles.css      #- 
+    page-layout: full
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+    toc-location: right
+    toc-title: "Índice"
+    code-copy: true
+    code-overflow: wrap    
+    code-fold: show
+    code-line-numbers: true
+
+# Enable CC licence appendix
+#license: "CC BY"
+
+lang: es  
+
+# Default execute options
+execute:
+  echo: true
+  message: false
+  warning: false
+  eval: true
+  #fig-align: center
+  freeze: true  #- des-comentar cuando estéis tuneando el blog
+                 #- https://quarto.org/docs/projects/code-execution.html#freeze
+    
