@@ -1,6 +1,6 @@
 Repo utilizado para elaborar el trabajo individual para la asignatura "Programación y manejo de datos en la era del Big Data" de la Universitat de València durante el curso 2022-2023. La página web de la asignatura puede verse aquí: https://perezp44.github.io/intro-ds-23-24-web/.
 
-La versión final del trabajo puede visualizarse en: https://AdriGuijarro.github.io/trabajo_BigData/.
+La versión final del trabajo puede visualizarse en: https://pepemasca.github.io/trabajo_BigData/.
 
 Autor: Javier Mascarell Gallego (jamasga@alumni.uv.es)
 
